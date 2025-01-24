@@ -31,6 +31,7 @@ def apply_custom_css():
             font-size: 2.5em;
             margin-bottom: 1em;
             scroll-margin-top: 2em;
+            padding-top: 2em;  /* Added padding for better scrolling */
         }
         .report-content h2 {
             color: #0D47A1;
@@ -40,12 +41,14 @@ def apply_custom_css():
             border-bottom: 2px solid #E3F2FD;
             padding-bottom: 0.3em;
             scroll-margin-top: 2em;
+            padding-top: 2em;  /* Added padding for better scrolling */
         }
         .report-content h3 {
             color: #1565C0;
             font-size: 1.5em;
             margin-top: 1.2em;
             scroll-margin-top: 2em;
+            padding-top: 2em;  /* Added padding for better scrolling */
         }
         .report-content p {
             font-size: 1.1em;
@@ -78,49 +81,95 @@ def apply_custom_css():
         .nav-section {
             position: sticky;
             top: 2rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .nav-section h3 {
+            color: #1565C0;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #E3F2FD;
         }
         .nav-section a {
             display: block;
-            padding: 0.3em 0;
-            color: #1565C0;
+            padding: 0.5rem 0.8rem;
+            margin: 0.3rem 0;
+            color: #424242;
             text-decoration: none;
-            transition: color 0.2s;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            line-height: 1.4;
         }
         .nav-section a:hover {
-            color: #0D47A1;
-            text-decoration: underline;
+            color: #1565C0;
+            background-color: #E3F2FD;
+            padding-left: 1rem;
         }
-        .download-button {
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            background-color: #1E88E5;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
+        .nav-section a.active {
+            color: #1565C0;
+            background-color: #E3F2FD;
+            font-weight: 500;
         }
-        .download-button:hover {
-            background-color: #1565C0;
+        /* Custom scrollbar for navigation */
+        .nav-section {
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #90CAF9 #E3F2FD;
         }
-        .reset-button {
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            background-color: #757575;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        .nav-section::-webkit-scrollbar {
+            width: 6px;
         }
-        .reset-button:hover {
-            background-color: #616161;
+        .nav-section::-webkit-scrollbar-track {
+            background: #E3F2FD;
+            border-radius: 3px;
+        }
+        .nav-section::-webkit-scrollbar-thumb {
+            background-color: #90CAF9;
+            border-radius: 3px;
         }
         </style>
+
+        <script>
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                // Update active state in navigation
+                const links = document.querySelectorAll('.nav-section a');
+                links.forEach(link => link.classList.remove('active'));
+                const activeLink = document.querySelector(`a[href="#${sectionId}"]`);
+                if (activeLink) activeLink.classList.add('active');
+            }
+        }
+
+        // Initialize intersection observer for active section highlighting
+        document.addEventListener('DOMContentLoaded', function() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        const links = document.querySelectorAll('.nav-section a');
+                        links.forEach(link => link.classList.remove('active'));
+                        const activeLink = document.querySelector(`a[href="#${id}"]`);
+                        if (activeLink) activeLink.classList.add('active');
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            // Observe all section headings
+            document.querySelectorAll('.report-content h1, .report-content h2, .report-content h3').forEach((section) => {
+                observer.observe(section);
+            });
+        });
+        </script>
     """, unsafe_allow_html=True)
 
 def create_section_id(header):
@@ -128,7 +177,7 @@ def create_section_id(header):
     return header.lower().replace(' ', '-').replace(':', '').replace('(', '').replace(')', '')
 
 def process_markdown(content):
-    """Process markdown content to render properly"""
+    """Process markdown content to render properly with section IDs"""
     lines = content.split('\n')
     processed_lines = []
     
@@ -137,6 +186,8 @@ def process_markdown(content):
             # Count the number of #s to determine heading level
             level = len(line) - len(line.lstrip('#'))
             text = line.strip('#').strip()
+            section_id = create_section_id(text)
+            processed_lines.append(f'<div id="{section_id}"></div>')
             processed_lines.append(f'<h{level}>{text}</h{level}>')
         else:
             processed_lines.append(line)
@@ -221,12 +272,20 @@ def main():
             st.markdown('<div class="nav-section">', unsafe_allow_html=True)
             st.markdown("### Quick Navigation")
             # Extract headers and create navigation links
-            headers = [line.strip('#').strip() for line in st.session_state.report_content.split('\n') 
-                      if line.strip().startswith('#')]
-            for header in headers:
+            headers = []
+            current_level = 0
+            for line in st.session_state.report_content.split('\n'):
+                if line.strip().startswith('#'):
+                    level = len(line) - len(line.lstrip('#'))
+                    text = line.strip('#').strip()
+                    headers.append((level, text))
+            
+            # Create hierarchical navigation
+            for level, header in headers:
+                indent = "&nbsp;" * ((level - 1) * 4)
                 section_id = create_section_id(header)
                 st.markdown(
-                    f'<a href="#{section_id}" onclick="scrollToSection(\'{section_id}\')">{header}</a>',
+                    f'{indent}<a href="#{section_id}" onclick="scrollToSection(\'{section_id}\')">{header}</a>',
                     unsafe_allow_html=True
                 )
             st.markdown('</div>', unsafe_allow_html=True)
