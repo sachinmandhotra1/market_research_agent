@@ -394,6 +394,33 @@ def main():
         # Main layout
         col1, col2 = st.columns([1, 4])
         
+        # Quick links in left column
+        with col1:
+            sections = []
+            # Extract main sections only (level 2 headers)
+            for line in st.session_state.report_content.split('\n'):
+                if line.strip().startswith('## '):
+                    text = line.strip('#').strip()
+                    # Remove any numbering
+                    text = re.sub(r'^\d+\.\s*', '', text)
+                    # Skip title and report name
+                    if not text.lower().startswith(('comprehensive', 'market research', 'generated')):
+                        sections.append(text)
+            
+            # Display sections as simple clickable text links
+            for section in sections:
+                section_id = create_section_id(section)
+                st.markdown(
+                    f'<a href="#{section_id}" '
+                    f'style="color: #333; text-decoration: none; display: block; padding: 5px 0; '
+                    f'transition: color 0.2s;" '
+                    f'onmouseover="this.style.color=\'#2E7D32\'" '
+                    f'onmouseout="this.style.color=\'#333\'">'
+                    f'{section}'
+                    f'</a>',
+                    unsafe_allow_html=True
+                )
+                    
         # Main content
         with col2:
             if st.session_state.report_content:
@@ -405,7 +432,10 @@ def main():
                 # Get report name
                 report_name = next((line.strip('#').strip() for line in lines if line.strip().startswith('# ')), "")
                 if report_name:
-                    st.markdown(f"### {report_name}")
+                    # Extract company/entity name from search query
+                    query = st.session_state.get('search_query', '')
+                    company_name = ' '.join(word.capitalize() for word in query.split()[:4])
+                    st.markdown(f"### Market Research Report: {company_name}")
                 
                 # Process content
                 current_section = []
@@ -421,24 +451,26 @@ def main():
                             if "Sources" in content or "Appendix" in content:
                                 # Process sources
                                 st.markdown("## Sources")
+                                current_category = None
                                 for source_line in content.split('\n'):
-                                    if source_line.strip() and not source_line.startswith('#'):
-                                        if '[' in source_line and ']' in source_line:
-                                            # Extract title and URL
+                                    if source_line.strip():
+                                        if source_line.startswith('###'):
+                                            # Category header without numbering
+                                            current_category = source_line.strip('#').strip()
+                                            # Remove any numbering from category
+                                            current_category = re.sub(r'^\d+\.\s*', '', current_category)
+                                            st.markdown(f"### {current_category}")
+                                        elif '[' in source_line and ']' in source_line:
+                                            # Extract title and URL, ensure proper bullet point format
                                             match = re.match(r'\[(.*?)\]\((.*?)\)', source_line)
                                             if match:
                                                 title, url = match.groups()
-                                                st.markdown(f"[{title}]({url})")
+                                                st.markdown(f"- [{title}]({url})")
                             else:
                                 # Format regular content
-                                # Split into paragraphs
                                 paragraphs = content.split('\n\n')
                                 for para in paragraphs:
                                     if para.strip():
-                                        # Format key terms in bold
-                                        para = re.sub(r'^([^:]+):', r'**\1**:', para)
-                                        # Remove extra formatting
-                                        para = re.sub(r'\*\*([^:]+)\*\*([^:])', r'\1\2', para)
                                         st.markdown(para)
                                 
                             st.markdown("---")
@@ -449,35 +481,6 @@ def main():
                     content = '\n'.join(current_section)
                     st.markdown(content)
                     st.markdown("---")
-
-        # Quick links
-        with col1:
-            sections = []
-            
-            # Extract main sections only (level 2 headers)
-            for line in st.session_state.report_content.split('\n'):
-                if line.strip().startswith('## '):
-                    text = line.strip('#').strip()
-                    # Remove any numbering
-                    text = re.sub(r'^\d+\.\s*', '', text)
-                    # Skip title and report name
-                    if not text.lower().startswith(('comprehensive', 'market research', 'generated')):
-                        sections.append(text)
-            
-            # Display quick links as markdown links
-            for section in sections:
-                section_id = create_section_id(section)
-                st.markdown(
-                    f'<div id="link_{section_id}">'
-                    f'<a href="#{section_id}" '
-                    f'style="color: #333; text-decoration: none; display: block; padding: 5px 0; '
-                    f'transition: color 0.2s;" '
-                    f'onmouseover="this.style.color=\'#2E7D32\'" '
-                    f'onmouseout="this.style.color=\'#333\'">'
-                    f'{section}'
-                    f'</a></div>',
-                    unsafe_allow_html=True
-                )
 
 if __name__ == "__main__":
     main() 
