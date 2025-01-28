@@ -362,12 +362,11 @@ def generate_report_content(research_data):
 
 def generate_report_title(query):
     """Generate a report title based on the search query"""
-    # Example logic to create a meaningful report title
-    # This can be customized further based on specific requirements
     keywords = query.split()
-    if len(keywords) > 4:
-        main_topic = ' '.join(keywords[:4])
-    else:
-        main_topic = ' '.join(keywords)
+    # if len(keywords) > 4:
+    #     main_topic = ' '.join(keywords[:4])
+    # else:
+    #     main_topic = ' '.join(keywords)
+    main_topic = ' '.join(keywords)
     
     return f"Market Analysis of {main_topic}: Trends, Challenges, and Opportunities"
