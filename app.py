@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 from dotenv import load_dotenv
-from market_research.crew_setup import MarketResearchCrew
+from market_research.crew_setup import MarketResearchCrew, LLM
 from market_research.report_generator import generate_report_file
 import re
 
@@ -285,7 +285,8 @@ def format_sources_section(content):
     
     return '\n'.join(html)
 
-def main():
+
+def main(llm_model: LLM):
     setup_page_config()
     
     if 'report_generated' not in st.session_state:
@@ -359,7 +360,7 @@ def main():
         if submit_button and search_query:
             try:
                 with st.spinner("Gathering information and generating report..."):
-                    crew = MarketResearchCrew()
+                    crew = MarketResearchCrew(llm_model)
                     research_data = crew.run_research(search_query)
                     report_path, report_content = generate_report_file(research_data)
                     st.session_state.report_generated = True
@@ -483,4 +484,25 @@ def main():
                     st.markdown("---")
 
 if __name__ == "__main__":
-    main() 
+
+    # Requires OPENAI_API_KEY in the .env file
+    openai_llm = LLM(
+        model="gpt-4o-mini",
+        temperature=0.1
+    )
+
+    # Requires GEMINI_API_KEY in the .env file
+    gemini_llm = LLM(
+        model="gemini/gemini-2.0-flash-exp",
+        temperature=0.1
+    )
+
+    # Requires ANTHROPIC_API_KEY in the .env file
+    anthropic_llm = LLM(
+        model="anthropic/claude-3-sonnet-20240229-v1:0",
+        temperature=0.1
+    )
+
+    llm = openai_llm
+
+    main(llm_model=llm)

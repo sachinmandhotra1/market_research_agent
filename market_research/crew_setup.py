@@ -1,9 +1,12 @@
-from crewai import Agent, Task, Crew
+from crewai import Agent, Task, Crew, LLM
 from crewai_tools import SerpApiGoogleSearchTool, FirecrawlScrapeWebsiteTool
 import os
+from typing import List, Dict, Optional
+
 
 class MarketResearchCrew:
-    def __init__(self):
+    def __init__(self, llm_model: Optional[LLM] = None):
+        self.llm = llm_model
         self.setup_tools()
 
     def setup_tools(self):
@@ -29,7 +32,8 @@ class MarketResearchCrew:
             finding and analyzing company and industry information. Your strength lies in 
             identifying reliable sources and relevant content.""",
             tools=[self.search_tool],
-            verbose=True
+            verbose=True,
+            llm=self.llm
         )
 
         # Content Scraper Agent
@@ -40,7 +44,8 @@ class MarketResearchCrew:
             You know how to extract relevant information and format it properly using Firecrawl.
             You focus on getting clean, relevant content without HTML or unnecessary elements.""",
             tools=[self.scrape_tool],
-            verbose=True
+            verbose=True,
+            llm=self.llm
         )
 
         # Analysis Agent
@@ -52,7 +57,8 @@ class MarketResearchCrew:
             trends, challenges, and opportunities. You are meticulous about citing sources 
             and providing proper attribution for all information. You ensure that every 
             significant claim or data point is backed by a source URL.""",
-            verbose=True
+            verbose=True,
+            llm=self.llm
         )
 
         return researcher, scraper, analyst

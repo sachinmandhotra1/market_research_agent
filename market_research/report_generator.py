@@ -228,7 +228,8 @@ def generate_report_file(research_data):
     filename = sanitize_filename(f"Market Analysis of {company_name}.docx")
     report_path = os.path.join('reports', filename)
     
-    doc.save(report_path)
+    # To save file automatically
+    # doc.save(report_path)
     
     return report_path, content
 
