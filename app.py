@@ -105,6 +105,7 @@ def main(llm_model: LLM):
             if st.session_state.report_path:
                 query = st.session_state.get('search_query', '')
                 company_name = ' '.join(word.capitalize() for word in query.split()[:4])
+                report_title = generate_report_title(query)
                 download_filename = f"Market Research Report of {report_title}.docx"
                 
                 with open(st.session_state.report_path, "rb") as file:
