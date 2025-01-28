@@ -29,6 +29,7 @@ def extract_company_name(content):
     
     return "Company"  # Default fallback
 
+
 def sanitize_filename(filename):
     """Sanitize the filename to be safe for all operating systems"""
     # Remove or replace invalid characters
@@ -36,6 +37,7 @@ def sanitize_filename(filename):
     # Remove multiple spaces
     filename = ' '.join(filename.split())
     return filename.strip()
+
 
 def setup_document_styles(doc):
     """Set up document styles for consistent formatting"""
@@ -69,6 +71,7 @@ def setup_document_styles(doc):
     quote_style.paragraph_format.space_before = Pt(12)
     quote_style.paragraph_format.space_after = Pt(12)
 
+
 def extract_markdown_links(content):
     """Extract markdown-style links with their context"""
     links = []
@@ -100,6 +103,7 @@ def extract_markdown_links(content):
     
     return links
 
+
 def categorize_source(text, url):
     """Categorize the source based on text and URL"""
     text_lower = text.lower()
@@ -119,6 +123,7 @@ def categorize_source(text, url):
             return category
     
     return "Other Sources"
+
 
 def format_sources_section(doc, links):
     """Format sources section with categorized links"""
@@ -146,15 +151,18 @@ def format_sources_section(doc, links):
             if link['context'] != link['text']:
                 p.add_run(f"\nContext: {link['context']}")
 
+
 def get_current_date():
     """Get current date in a readable format"""
     return datetime.now().strftime("%B %d, %Y")
+
 
 def process_inline_citations(content):
     """Process inline citations to use markdown-style links"""
     # Replace raw URL citations with markdown-style links
     pattern = r'\(source: (http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)\)'
     return re.sub(pattern, r'([source](\1))', content)
+
 
 def generate_report_file(research_data):
     """Generate a formatted Word document from the research data"""
@@ -229,9 +237,10 @@ def generate_report_file(research_data):
     report_path = os.path.join('reports', filename)
     
     # To save file automatically
-    # doc.save(report_path)
+    doc.save(report_path)
     
     return report_path, content
+
 
 def generate_report_content(research_data):
     """Generate comprehensive report content from research data"""
@@ -349,3 +358,16 @@ def generate_report_content(research_data):
             content.append(f"[{source['title']}]({source['url']})")
     
     return '\n'.join(content) 
+
+
+def generate_report_title(query):
+    """Generate a report title based on the search query"""
+    # Example logic to create a meaningful report title
+    # This can be customized further based on specific requirements
+    keywords = query.split()
+    if len(keywords) > 4:
+        main_topic = ' '.join(keywords[:4])
+    else:
+        main_topic = ' '.join(keywords)
+    
+    return f"Market Analysis of {main_topic}: Trends, Challenges, and Opportunities"
